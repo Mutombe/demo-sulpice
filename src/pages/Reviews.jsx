@@ -1,418 +1,461 @@
-import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useRef } from 'react';
+import { Link } from 'react-router-dom';
+import { motion, useScroll, useTransform, useInView, AnimatePresence } from 'framer-motion';
 import {
   Star,
   Quotes,
+  CaretRight,
+  ArrowRight,
   GoogleLogo,
-  ThumbsUp,
-  ShieldCheck,
-  CaretDown,
 } from '@phosphor-icons/react';
 import PageTransition from '../components/PageTransition';
-import PageHero from '../components/PageHero';
-import SectionReveal from '../components/SectionReveal';
 import siteData from '../data/siteData';
 
-function Reviews() {
-  const { business, reviews } = siteData;
-  const [showAll, setShowAll] = useState(false);
+/* ================================================================
+   BRAND CONSTANTS
+   ================================================================ */
+const GOLD = '#D4A853';
+const CYAN = '#00BCD4';
 
-  const heroImage =
-    siteData.pageImages?.reviews ||
-    siteData.hero?.backgroundImage ||
-    '';
+/* ================================================================
+   NOISE TEXTURE
+   ================================================================ */
+function NoiseTexture({ opacity = 0.035 }) {
+  return (
+    <div
+      className="absolute inset-0 pointer-events-none z-10"
+      style={{
+        opacity,
+        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+        backgroundRepeat: 'repeat',
+        backgroundSize: '128px 128px',
+      }}
+    />
+  );
+}
 
-  // Find the featured review: highest-rated, then longest text
-  const featuredReview = useMemo(() => {
-    if (!reviews.items || reviews.items.length === 0) return null;
-    const sorted = [...reviews.items].sort((a, b) => {
-      if (b.rating !== a.rating) return b.rating - a.rating;
-      return (b.text?.length || 0) - (a.text?.length || 0);
-    });
-    return sorted[0];
-  }, [reviews.items]);
+/* ================================================================
+   AVATAR POOL
+   ================================================================ */
+const avatarPool = [
+  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80',
+  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&q=80',
+  'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=100&q=80',
+  'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&q=80',
+  'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&q=80',
+  'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&q=80',
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&q=80',
+  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&q=80',
+];
 
-  // Remaining reviews (everything except the featured one)
-  const remainingReviews = useMemo(() => {
-    if (!featuredReview) return reviews.items;
-    return reviews.items.filter(
-      (r) => r.name !== featuredReview.name || r.text !== featuredReview.text
-    );
-  }, [reviews.items, featuredReview]);
+function getEventBadge(role) {
+  const r = role.toLowerCase();
+  if (r.includes('bride') || r.includes('couple') || r.includes('wedding')) return 'Wedding';
+  if (r.includes('birthday') || r.includes('parent') || r.includes('celebrant')) return 'Birthday';
+  if (r.includes('corporate') || r.includes('ceo') || r.includes('director') || r.includes('partner') || r.includes('coo') || r.includes('hr')) return 'Corporate';
+  if (r.includes('conference') || r.includes('events director')) return 'Conference';
+  if (r.includes('planner')) return 'Wedding';
+  return 'Event';
+}
 
-  const INITIAL_SHOW_COUNT = 6;
-  const visibleReviews = showAll
-    ? remainingReviews
-    : remainingReviews.slice(0, INITIAL_SHOW_COUNT);
-  const hasMore = remainingReviews.length > INITIAL_SHOW_COUNT;
-
-  // Calculate total reviews and average for the social proof banner
-  const totalStars = useMemo(() => {
-    return reviews.ratingBreakdown.reduce((sum, item) => sum + item.count, 0);
-  }, [reviews.ratingBreakdown]);
+/* ================================================================
+   1. HERO
+   ================================================================ */
+function ReviewsHero() {
+  const { reviews, hero } = siteData;
+  const containerRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ['start start', 'end start'],
+  });
+  const bgY = useTransform(scrollYProgress, [0, 1], ['0%', '25%']);
+  const textOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
 
   return (
-    <PageTransition>
-      <PageHero
-        label="Client Reviews"
-        title={reviews.heroTitle}
-        subtitle={reviews.heroSubtitle}
-        image={heroImage}
-        imageAlt={`${business.name} client testimonials`}
-      />
+    <section
+      ref={containerRef}
+      className="relative min-h-[60vh] sm:min-h-[65vh] flex items-end overflow-hidden"
+      style={{ background: '#0A0A0A' }}
+    >
+      <motion.div className="absolute inset-0" style={{ y: bgY }}>
+        <img
+          src={hero.backgroundImages[0]?.url}
+          alt="Beautiful event setting"
+          className="w-full h-[130%] object-cover object-center"
+          loading="eager"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/75 to-[#0A0A0A]/30" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0A0A0A]/70 via-transparent to-transparent" />
+      </motion.div>
 
-      {/* ── Social Proof Banner ── */}
-      <section className="relative -mt-6 z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <SectionReveal>
-          <div className="bg-navy-900 rounded-2xl px-6 sm:px-10 py-5 sm:py-6 flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-center shadow-2xl shadow-navy-950/30">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl sm:text-3xl font-bold text-gold-400">
-                {business.rating}
-              </span>
-              <div className="flex items-center gap-0.5">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    size={16}
-                    weight="fill"
-                    className={
-                      i < business.ratingRounded
-                        ? 'text-gold-400'
-                        : 'text-white/20'
-                    }
-                  />
-                ))}
-              </div>
+      <NoiseTexture opacity={0.03} />
+      <div className="absolute top-[15%] left-0 w-[2px] h-32 sm:h-40 bg-gradient-to-b from-transparent via-gold-500 to-transparent z-20" />
+
+      <motion.div
+        className="relative z-20 max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 w-full pb-16 sm:pb-20 pt-32"
+        style={{ opacity: textOpacity }}
+      >
+        <motion.nav initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="mb-8">
+          <ol className="flex items-center gap-1.5 text-xs sm:text-sm">
+            <li><Link to="/" className="text-white/40 hover:text-white/70 transition-colors" style={{ fontFamily: 'var(--font-sans)' }}>Home</Link></li>
+            <li><CaretRight size={12} weight="bold" className="text-gold-500/60" /></li>
+            <li className="text-white/80" style={{ fontFamily: 'var(--font-sans)' }}>Reviews</li>
+          </ol>
+        </motion.nav>
+
+        <motion.div
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: 1, delay: 0.3, ease: 'easeOut' }}
+          className="w-16 h-[2px] bg-gradient-to-r from-gold-500 to-gold-400/50 mb-6 origin-left"
+        />
+
+        <motion.p
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="text-gold-400 text-xs sm:text-sm font-semibold uppercase tracking-[0.3em] mb-6"
+          style={{ fontFamily: 'var(--font-sans)' }}
+        >
+          Testimonials
+        </motion.p>
+
+        <div className="overflow-hidden">
+          {['CLIENT', 'VOICES'].map((line, i) => (
+            <motion.div
+              key={line}
+              initial={{ y: '110%' }}
+              animate={{ y: 0 }}
+              transition={{ duration: 1, delay: 0.5 + i * 0.15, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <h1
+                className={`font-heading leading-[0.92] tracking-tight ${
+                  line === 'VOICES'
+                    ? 'bg-gradient-to-r from-gold-500 via-gold-400 to-gold-600 bg-clip-text text-transparent italic'
+                    : 'text-white'
+                }`}
+                style={{ fontSize: 'clamp(2.5rem, 7vw, 5rem)', fontWeight: line === 'VOICES' ? 700 : 300 }}
+              >
+                {line}
+              </h1>
+            </motion.div>
+          ))}
+        </div>
+
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 1 }}
+          className="text-white/40 text-sm sm:text-base max-w-lg mt-6 leading-relaxed"
+          style={{ fontFamily: 'var(--font-sans)' }}
+        >
+          {reviews.heroSubtitle}
+        </motion.p>
+
+        <motion.div
+          className="absolute left-0 bottom-0 h-[2px] bg-gradient-to-r from-gold-500 via-gold-400 to-transparent"
+          initial={{ width: 0 }}
+          animate={{ width: '40%' }}
+          transition={{ duration: 1.2, delay: 0.8, ease: [0.23, 1, 0.32, 1] }}
+        />
+      </motion.div>
+    </section>
+  );
+}
+
+/* ================================================================
+   2. RATING SUMMARY BANNER
+   ================================================================ */
+function RatingSummary() {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-50px' });
+  const { business } = siteData;
+
+  return (
+    <section ref={ref} className="relative overflow-hidden" style={{ background: '#0A0A0A' }}>
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-gold-500/40 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-gold-500/40 to-transparent" />
+
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-32 bg-gold-500/5 rounded-full blur-3xl" />
+
+      <div className="relative max-w-4xl mx-auto px-5 sm:px-8 lg:px-12 py-16 sm:py-20">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8 }}
+          className="flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-16"
+        >
+          <div className="text-center">
+            <div
+              className="font-heading text-gold-500 italic leading-none"
+              style={{ fontSize: 'clamp(3.5rem, 8vw, 6rem)', textShadow: '0 0 40px rgba(212,168,83,0.15)' }}
+            >
+              {business.rating}
             </div>
-            <div className="w-px h-8 bg-white/10 hidden sm:block" />
-            <span className="text-white/70 text-sm font-medium">
-              <span className="text-white font-bold">{business.reviewCount}</span> Reviews on Google
-            </span>
-            <div className="w-px h-8 bg-white/10 hidden sm:block" />
-            <div className="flex items-center gap-2 text-white/70 text-sm font-medium">
-              <GoogleLogo size={18} weight="bold" className="text-white/50" />
-              <span>
-                Trusted Since <span className="text-white font-bold">{business.established || '2008'}</span>
+            <div className="flex items-center justify-center gap-1 mt-3">
+              {[...Array(business.ratingRounded)].map((_, i) => (
+                <Star key={i} size={18} weight="fill" className="text-gold-500" />
+              ))}
+            </div>
+          </div>
+
+          <div className="hidden sm:block w-[1px] h-16 bg-gradient-to-b from-transparent via-gold-500/30 to-transparent" />
+
+          <div className="text-center sm:text-left">
+            <div className="text-white font-heading text-2xl sm:text-3xl italic">
+              {business.reviewCount} Reviews
+            </div>
+            <div className="flex items-center gap-2 mt-2 justify-center sm:justify-start">
+              <GoogleLogo size={16} weight="bold" className="text-white/30" />
+              <span className="text-white/30 text-xs uppercase tracking-[0.2em]" style={{ fontFamily: 'var(--font-sans)' }}>
+                Verified on Google
               </span>
             </div>
           </div>
-        </SectionReveal>
-      </section>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
 
-      {/* ── Featured Review ── */}
-      {featuredReview && (
-        <section className="section-padding bg-white">
-          <div className="max-w-4xl mx-auto">
-            <SectionReveal>
-              <div className="relative bg-gradient-to-br from-earth-50 to-white rounded-3xl p-8 sm:p-10 md:p-14 border border-earth-100 shadow-xl shadow-black/5">
-                {/* Decorative oversized quotes */}
-                <div className="absolute top-6 left-6 sm:top-8 sm:left-8">
-                  <Quotes
-                    size={64}
-                    weight="fill"
-                    className="text-gold-500/10"
+/* ================================================================
+   3. FEATURED REVIEW
+   ================================================================ */
+function FeaturedReview() {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-80px' });
+  const { reviews } = siteData;
+  const featured = reviews.items[0];
+
+  return (
+    <section ref={ref} className="relative py-24 sm:py-32 lg:py-40 overflow-hidden" style={{ background: '#111111' }}>
+      <NoiseTexture opacity={0.02} />
+
+      <div className="relative z-10 max-w-4xl mx-auto px-5 sm:px-8 lg:px-12 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8 }}
+        >
+          <Quotes size={64} weight="fill" className="text-gold-500/15 mx-auto mb-8" />
+
+          <blockquote className="text-white font-heading text-xl sm:text-2xl lg:text-3xl italic leading-relaxed mb-10">
+            &ldquo;{featured.text}&rdquo;
+          </blockquote>
+
+          <div className="flex flex-col items-center gap-3">
+            <img
+              src={avatarPool[0]}
+              alt={featured.name}
+              className="w-14 h-14 object-cover object-center border-2 border-gold-500/30"
+              loading="lazy"
+            />
+            <div className="w-8 h-[2px] bg-gold-500" />
+            <div className="text-white text-sm uppercase tracking-[0.15em] font-semibold" style={{ fontFamily: 'var(--font-sans)' }}>
+              {featured.name}
+            </div>
+            <div className="text-white/40 text-xs uppercase tracking-[0.15em]" style={{ fontFamily: 'var(--font-sans)' }}>
+              {featured.role}
+            </div>
+            <div className="flex items-center gap-0.5 mt-1">
+              {[...Array(featured.rating)].map((_, i) => (
+                <Star key={i} size={14} weight="fill" className="text-gold-500" />
+              ))}
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+/* ================================================================
+   4. RATING BREAKDOWN
+   ================================================================ */
+function RatingBreakdown() {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-50px' });
+
+  const ratings = [
+    { stars: 5, pct: 92 },
+    { stars: 4, pct: 5 },
+    { stars: 3, pct: 2 },
+    { stars: 2, pct: 1 },
+    { stars: 1, pct: 0 },
+  ];
+
+  return (
+    <section ref={ref} className="py-16 sm:py-20 overflow-hidden" style={{ background: '#0A0A0A' }}>
+      <div className="max-w-2xl mx-auto px-5 sm:px-8 lg:px-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.7 }}
+        >
+          <div className="w-12 h-[2px] bg-gold-500 mb-6 mx-auto" />
+          <h3 className="font-heading text-white text-xl italic tracking-wide text-center mb-8">
+            Rating <span className="text-gold-500">Breakdown</span>
+          </h3>
+
+          <div className="space-y-3">
+            {ratings.map((r, i) => (
+              <motion.div
+                key={r.stars}
+                initial={{ opacity: 0, x: -20 }}
+                animate={inView ? { opacity: 1, x: 0 } : {}}
+                transition={{ duration: 0.5, delay: i * 0.08 }}
+                className="flex items-center gap-4"
+              >
+                <div className="flex items-center gap-1 w-20 justify-end shrink-0">
+                  <span className="text-white/50 text-sm" style={{ fontFamily: 'var(--font-sans)' }}>{r.stars}</span>
+                  <Star size={12} weight="fill" className="text-gold-500/60" />
+                </div>
+                <div className="flex-1 h-2 bg-white/5 overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={inView ? { width: `${r.pct}%` } : {}}
+                    transition={{ duration: 1, delay: 0.3 + i * 0.1, ease: 'easeOut' }}
+                    className="h-full bg-gradient-to-r from-gold-500 to-gold-400"
                   />
                 </div>
-                <div className="absolute bottom-6 right-6 sm:bottom-8 sm:right-8 rotate-180">
-                  <Quotes
-                    size={48}
-                    weight="fill"
-                    className="text-gold-500/10"
-                  />
-                </div>
+                <span className="text-white/30 text-xs w-10 text-right" style={{ fontFamily: 'var(--font-sans)' }}>
+                  {r.pct}%
+                </span>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
 
-                {/* Gold accent line */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-transparent via-gold-500 to-transparent rounded-full" />
+/* ================================================================
+   5. REVIEW CARDS GRID
+   ================================================================ */
+function ReviewsGrid() {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-80px' });
+  const { reviews } = siteData;
+  const [visibleCount, setVisibleCount] = useState(8);
 
-                <div className="relative text-center">
+  const visibleReviews = reviews.items.slice(0, visibleCount);
+  const hasMore = visibleCount < reviews.items.length;
+
+  return (
+    <section ref={ref} className="py-24 sm:py-32 overflow-hidden" style={{ background: '#111111' }}>
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8 }}
+          className="mb-14 sm:mb-20"
+        >
+          <div className="w-12 h-[2px] bg-gold-500 mb-6" />
+          <p className="text-gold-500/60 text-xs uppercase tracking-[0.3em] mb-3" style={{ fontFamily: 'var(--font-sans)' }}>All Reviews</p>
+          <h2
+            className="font-heading text-white leading-[0.95] italic"
+            style={{ fontSize: 'clamp(2rem, 4.5vw, 3.5rem)' }}
+          >
+            What Our <span className="text-gold-500">Clients Say</span>
+          </h2>
+        </motion.div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+          <AnimatePresence>
+            {visibleReviews.map((review, i) => {
+              const avatarSrc = review.image || review.avatar || avatarPool[i % avatarPool.length];
+              const eventBadge = getEventBadge(review.role);
+
+              return (
+                <motion.div
+                  key={review.name + i}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: Math.min(i * 0.06, 0.5) }}
+                  className="group relative border border-white/5 p-6 sm:p-7 hover:border-gold-500/15 transition-colors duration-500"
+                  style={{ background: '#0A0A0A' }}
+                >
+                  {/* Event type badge */}
+                  <div className="absolute top-5 right-5">
+                    <span
+                      className="text-[10px] uppercase tracking-[0.15em] text-gold-500/50 border border-gold-500/15 px-2.5 py-1"
+                      style={{ fontFamily: 'var(--font-sans)' }}
+                    >
+                      {eventBadge}
+                    </span>
+                  </div>
+
                   {/* Stars */}
-                  <div className="flex items-center justify-center gap-1.5 mb-6">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        size={24}
-                        weight="fill"
-                        className={
-                          i < featuredReview.rating
-                            ? 'text-gold-500'
-                            : 'text-earth-200'
-                        }
-                      />
+                  <div className="flex items-center gap-0.5 mb-5">
+                    {[...Array(review.rating)].map((_, j) => (
+                      <Star key={j} size={13} weight="fill" className="text-gold-500" />
                     ))}
                   </div>
 
                   {/* Quote text */}
-                  <blockquote className="text-lg sm:text-xl md:text-2xl text-navy-900 leading-relaxed font-medium mb-8 italic">
-                    "{featuredReview.text}"
-                  </blockquote>
+                  <p className="text-white/50 text-sm leading-relaxed mb-6" style={{ fontFamily: 'var(--font-sans)' }}>
+                    &ldquo;{review.text}&rdquo;
+                  </p>
 
-                  {/* Author */}
-                  <div className="flex items-center justify-center gap-4">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden ring-2 ring-gold-500/20 ring-offset-2">
-                      {featuredReview.avatar ? (
-                        <img
-                          src={featuredReview.avatar}
-                          alt={featuredReview.name}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                          referrerPolicy="no-referrer"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-navy-900 flex items-center justify-center text-white font-bold text-lg">
-                          {featuredReview.name.charAt(0)}
-                        </div>
-                      )}
-                    </div>
-                    <div className="text-left">
-                      <p className="text-navy-900 font-bold text-base">
-                        {featuredReview.name}
-                      </p>
-                      <p className="text-steel-400 text-sm">
-                        {featuredReview.role}
-                      </p>
-                    </div>
-                    {featuredReview.project && (
-                      <span className="hidden sm:inline-block text-xs text-gold-600 bg-gold-50 px-3 py-1.5 rounded-full font-semibold border border-gold-100 ml-2">
-                        {featuredReview.project}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </SectionReveal>
-          </div>
-        </section>
-      )}
-
-      {/* ── Rating Breakdown ── */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-        <SectionReveal>
-          <div className="bg-white rounded-2xl shadow-xl shadow-black/5 border border-earth-100 p-6 sm:p-8 md:p-10">
-            <div className="grid sm:grid-cols-2 gap-8 sm:gap-10 items-center">
-              <div className="text-center sm:text-left">
-                <div className="text-5xl sm:text-6xl font-bold text-navy-900 mb-2">
-                  {business.rating}
-                </div>
-                <div className="flex items-center justify-center sm:justify-start gap-1 mb-2">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      size={22}
-                      weight="fill"
-                      className={
-                        i < business.ratingRounded
-                          ? 'text-gold-500'
-                          : 'text-gold-500/40'
-                      }
+                  {/* Attribution with avatar */}
+                  <div className="flex items-center gap-3 pt-4 border-t border-white/5">
+                    <img
+                      src={avatarSrc}
+                      alt={review.name}
+                      className="w-10 h-10 object-cover object-center border border-gold-500/20 shrink-0"
+                      loading="lazy"
                     />
-                  ))}
-                </div>
-                <p className="text-steel-500 text-sm sm:text-base">
-                  Based on {business.reviewCount} reviews
-                </p>
-                <div className="flex items-center justify-center sm:justify-start gap-2 mt-3 text-sm text-steel-400">
-                  <GoogleLogo size={18} weight="bold" />
-                  <span>Google Reviews</span>
-                </div>
-              </div>
-
-              {/* Rating Bars */}
-              <div className="space-y-3">
-                {reviews.ratingBreakdown.map((item) => {
-                  const percentage =
-                    totalStars > 0
-                      ? (item.count / totalStars) * 100
-                      : 0;
-                  return (
-                    <div
-                      key={item.stars}
-                      className="flex items-center gap-3"
-                    >
-                      <span className="text-sm text-steel-500 w-12 font-medium">
-                        {item.stars} star
-                      </span>
-                      <div className="flex-1 h-3 bg-earth-100 rounded-full overflow-hidden relative">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          whileInView={{
-                            width: `${percentage}%`,
-                          }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 1, delay: 0.3 }}
-                          className="h-full bg-gradient-to-r from-gold-400 to-gold-500 rounded-full relative"
-                          style={{
-                            boxShadow:
-                              percentage > 0
-                                ? '0 0 8px rgba(212, 168, 83, 0.4)'
-                                : 'none',
-                          }}
-                        />
+                    <div>
+                      <div className="text-white text-sm font-semibold" style={{ fontFamily: 'var(--font-sans)' }}>
+                        {review.name}
                       </div>
-                      <span className="text-sm text-steel-400 w-8 text-right font-medium">
-                        {item.count}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </SectionReveal>
-      </section>
-
-      {/* ── Reviews Grid ── */}
-      <section className="section-padding bg-earth-50">
-        <div className="max-w-7xl mx-auto">
-          <SectionReveal>
-            <div className="text-center mb-10 sm:mb-14">
-              <span className="inline-block text-gold-600 text-sm font-semibold uppercase tracking-wider mb-3">
-                Client Feedback
-              </span>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-navy-900">
-                What Our Clients Say
-              </h2>
-            </div>
-          </SectionReveal>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            <AnimatePresence mode="popLayout">
-              {visibleReviews.map((review, index) => (
-                <motion.div
-                  key={review.name + review.date}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.4, delay: (index % 6) * 0.06 }}
-                  layout
-                >
-                  <div className="bg-white rounded-2xl p-5 sm:p-6 border border-earth-100 h-full flex flex-col hover:shadow-lg hover:border-earth-200 transition-all duration-300 group">
-                    {/* Header: Stars + Verified Badge */}
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            size={16}
-                            weight="fill"
-                            className={
-                              i < review.rating
-                                ? 'text-gold-500'
-                                : 'text-earth-200'
-                            }
-                          />
-                        ))}
-                      </div>
-                      <div className="flex items-center gap-1 text-green-600 bg-green-50 px-2 py-0.5 rounded-md">
-                        <ShieldCheck size={12} weight="fill" />
-                        <span className="text-[10px] font-semibold uppercase tracking-wide">
-                          Verified
-                        </span>
-                      </div>
-                    </div>
-
-                    <span className="text-xs text-steel-400 mb-3 sm:mb-4">
-                      {review.date}
-                    </span>
-
-                    {/* Review Text */}
-                    <div className="flex-1">
-                      <Quotes
-                        size={22}
-                        weight="fill"
-                        className="text-gold-500/15 mb-2"
-                      />
-                      <p className="text-steel-600 text-sm leading-relaxed">
-                        {review.text}
-                      </p>
-                    </div>
-
-                    {/* Footer: Author + Project Tag */}
-                    <div className="mt-4 sm:mt-6 pt-4 border-t border-earth-100">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden shrink-0 ring-2 ring-earth-100">
-                            {review.avatar ? (
-                              <img
-                                src={review.avatar}
-                                alt={review.name}
-                                className="w-full h-full object-cover"
-                                loading="lazy"
-                                referrerPolicy="no-referrer"
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-navy-900 flex items-center justify-center text-white font-semibold text-sm">
-                                {review.name.charAt(0)}
-                              </div>
-                            )}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-navy-900 font-semibold text-sm truncate">
-                              {review.name}
-                            </p>
-                            <p className="text-steel-400 text-xs truncate">
-                              {review.role}
-                            </p>
-                          </div>
-                        </div>
-                        <span className="text-xs text-gold-600 bg-gold-50 px-2.5 py-1 rounded-full whitespace-nowrap shrink-0 font-semibold border border-gold-100">
-                          {review.project}
-                        </span>
+                      <div className="text-white/30 text-xs" style={{ fontFamily: 'var(--font-sans)' }}>
+                        {review.role}
                       </div>
                     </div>
                   </div>
+
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-gold-500 to-gold-400 scale-x-0 group-hover:scale-x-100 transition-transform duration-700 origin-left" />
                 </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
-
-          {/* Show All / Show Less Button */}
-          {hasMore && (
-            <SectionReveal>
-              <div className="text-center mt-10 sm:mt-12">
-                <button
-                  onClick={() => setShowAll(!showAll)}
-                  className="inline-flex items-center gap-2 bg-white border-2 border-navy-900 text-navy-900 px-6 sm:px-8 py-3 rounded-lg font-semibold transition-all duration-300 hover:bg-navy-900 hover:text-white hover:-translate-y-0.5 text-sm sm:text-base"
-                >
-                  {showAll ? 'Show Less' : `Show All ${remainingReviews.length} Reviews`}
-                  <CaretDown
-                    size={18}
-                    className={`transition-transform duration-300 ${showAll ? 'rotate-180' : ''}`}
-                  />
-                </button>
-              </div>
-            </SectionReveal>
-          )}
+              );
+            })}
+          </AnimatePresence>
         </div>
-      </section>
 
-      {/* ── CTA ── */}
-      <section className="relative py-20 sm:py-24 overflow-hidden">
-        <div className="absolute inset-0 bg-navy-900" />
-        <div className="absolute inset-0 opacity-5 bg-pattern-dots text-white" />
-        <div className="relative max-w-3xl mx-auto px-4 text-center">
-          <SectionReveal>
-            <ThumbsUp
-              size={48}
-              className="text-gold-400 mx-auto mb-6"
-              weight="fill"
-            />
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4">
-              {reviews.ctaTitle}
-            </h2>
-            <p className="text-white/60 text-base sm:text-lg mb-6 sm:mb-8">
-              {reviews.ctaSubtitle}
-            </p>
-            <a
-              href={`https://wa.me/${business.whatsappNumber}?text=${encodeURIComponent(reviews.ctaWhatsappText)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-primary text-sm sm:text-base"
+        {hasMore && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="text-center mt-12"
+          >
+            <button
+              onClick={() => setVisibleCount((prev) => prev + 6)}
+              className="group inline-flex items-center gap-3 border border-gold-500/30 text-gold-500 px-8 py-4 text-sm uppercase tracking-[0.15em] font-semibold hover:bg-gold-500/10 hover:border-gold-500/50 transition-all duration-300"
+              style={{ fontFamily: 'var(--font-sans)' }}
             >
-              {reviews.ctaCta}
-            </a>
-          </SectionReveal>
-        </div>
-      </section>
+              Load More Reviews
+              <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+            </button>
+          </motion.div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/* ================================================================
+   REVIEWS — Assembled
+   ================================================================ */
+function Reviews() {
+  return (
+    <PageTransition>
+      <ReviewsHero />
+      <RatingSummary />
+      <FeaturedReview />
+      <RatingBreakdown />
+      <ReviewsGrid />
     </PageTransition>
   );
 }

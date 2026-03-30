@@ -261,7 +261,7 @@ const siteData = {
         image: "https://images.unsplash.com/photo-1505236858219-8359eb29e329?w=800&q=80",
         images: [
           "https://images.unsplash.com/photo-1505236858219-8359eb29e329?w=800&q=80",
-          "https://images.unsplash.com/photo-1529543544282-ea99407407c3?w=800&q=80",
+          "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=800&q=80",
         ],
       },
       {
@@ -300,9 +300,9 @@ const siteData = {
         desc: "A premium product launch designed around light with custom LED installations and projection mapping.",
         client: "Samsung Africa",
         services: ["Stage Design", "LED Installations", "Brand Styling", "VIP Experience"],
-        image: "https://images.unsplash.com/photo-1529543544282-ea99407407c3?w=800&q=80",
+        image: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=800&q=80",
         images: [
-          "https://images.unsplash.com/photo-1529543544282-ea99407407c3?w=800&q=80",
+          "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=800&q=80",
           "https://images.unsplash.com/photo-1549488344-cbb6c34cf08b?w=800&q=80",
         ],
       },

@@ -388,8 +388,8 @@ function ServicesGrid() {
                     loading="lazy"
                   />
 
-                  {/* Gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/50 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
+                  {/* Gradient overlay — always strong for readability */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/60 to-navy-950/20 opacity-90" />
 
                   {/* Gold number watermark */}
                   <div className="absolute top-4 right-5 z-10">
@@ -408,19 +408,19 @@ function ServicesGrid() {
                     <h3 className="font-heading text-white text-xl sm:text-2xl italic tracking-wide mb-2">
                       {service.title}
                     </h3>
-                    {/* Description reveals on hover */}
-                    <p className="text-white/0 group-hover:text-white/60 text-sm leading-relaxed transition-all duration-700 max-h-0 group-hover:max-h-28 overflow-hidden" style={{ fontFamily: 'var(--font-sans)' }}>
+                    {/* Description always visible */}
+                    <p className="text-white/60 text-sm leading-relaxed" style={{ fontFamily: 'var(--font-sans)' }}>
                       {service.desc}
                     </p>
-                    {/* Arrow */}
-                    <div className="flex items-center gap-2 mt-3 text-gold-500 opacity-0 group-hover:opacity-100 translate-y-3 group-hover:translate-y-0 transition-all duration-500">
+                    {/* Arrow always visible */}
+                    <div className="flex items-center gap-2 mt-3 text-gold-500 group-hover:translate-x-1 transition-transform duration-300">
                       <span className="text-xs uppercase tracking-[0.2em]" style={{ fontFamily: 'var(--font-sans)' }}>Explore</span>
                       <ArrowRight size={14} />
                     </div>
                   </div>
 
-                  {/* Bottom gold accent on hover */}
-                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-gold-500 to-gold-400 scale-x-0 group-hover:scale-x-100 transition-transform duration-700 origin-left z-10" />
+                  {/* Bottom gold accent — always visible */}
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-gold-500 to-gold-400 z-10" />
                 </Link>
               </motion.div>
             );
@@ -697,7 +697,7 @@ function WhyChooseUs() {
             className="relative"
           >
             <img
-              src="https://images.unsplash.com/photo-1529543544282-ea99407407c3?w=800&q=80"
+              src="https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=800&q=80"
               alt="Sulpice event setup in progress"
               className="w-full aspect-[4/5] object-cover object-center"
               loading="lazy"
@@ -965,7 +965,7 @@ function SocialFeed() {
     'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=400&q=80',
     'https://images.unsplash.com/photo-1459501462159-97d5bded1416?w=400&q=80',
     'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=400&q=80',
-    'https://images.unsplash.com/photo-1529543544282-ea99407407c3?w=400&q=80',
+    'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=400&q=80',
   ];
 
   return (
